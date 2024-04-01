@@ -1,7 +1,7 @@
 #include <raylib.h>
 #include <rlgl.h>
 #include "baseObject.h"
-#include "himegui.h"
+#include "editor.h"
 
 // Constants ------------------------------------------------------------------
 const size_t DEFAULT_WINDOW_WIDTH = 600;
@@ -48,7 +48,7 @@ int main(void) {
         toolPanel.width - 2 * toolBorderThickness,
         50
     };
-    RenderTexture2D gridLines = LoadRenderTexture(
+    RenderTexture2D editor = LoadRenderTexture(
         editorPanel.width,
         editorPanel.height
     );
@@ -76,7 +76,7 @@ int main(void) {
             editorPanel.x = toolPanel.width,
             editorPanel.width = GetScreenWidth() - toolPanel.width;
             editorPanel.height = GetScreenHeight();
-            gridLines = LoadRenderTexture(
+            editor = LoadRenderTexture(
                 editorPanel.width,
                 editorPanel.height
             );
@@ -106,7 +106,7 @@ int main(void) {
 
             const Color guiBGColor = {0x5c, 0x57, 0x57, 0xff};
             ClearBackground(guiBGColor);
-            DrawGrid2D(editorPanel, editorCam, gridLines);
+            DrawEditor(editor, editorPanel, editorCam);
             if (CheckCollisionPointRec(mousePos, testButton)) {
                 if (IsMouseButtonDown(MOUSE_BUTTON_LEFT)) {
                     DrawRectangleRec(testButton, DARKGRAY);
@@ -123,12 +123,6 @@ int main(void) {
             DrawRectangleLinesEx(toolPanel, toolBorderThickness, toolBorderColor);
             DrawRectangleLinesEx(editorPanel, toolBorderThickness, toolBorderColor);
 
-            BeginMode2D(editorCam);
-
-
-            
-            EndMode2D();
-
             DrawFPS(0, 0);
 
         EndDrawing();
@@ -136,7 +130,7 @@ int main(void) {
     // ------------------------------------------------------------------------
 
     // De-Initialization ------------------------------------------------------
-    UnloadRenderTexture(gridLines);
+    UnloadRenderTexture(editor);
 
     CloseWindow();
     // ------------------------------------------------------------------------
