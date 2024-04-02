@@ -18,7 +18,7 @@ int main(void) {
     SetTargetFPS(DEFAULT_MAX_FPS);
     // SetExitKey(KEY_NULL);
     
-    //Texture2D texture = LoadTexture(ASSETS_PATH "testimage.png");
+    Texture2D texture = LoadTexture(ASSETS_PATH "testimage.png");
     
     /* BaseObject testObj = CLITERAL(BaseObject){
         CLITERAL(Vector2) {0, 0},
@@ -29,7 +29,7 @@ int main(void) {
     
     const float toolBorderThickness = 2.0f;
     const Color toolBorderColor = WHITE;
-    
+
     Rectangle toolPanel = {
         0,
         0,
@@ -48,14 +48,10 @@ int main(void) {
         toolPanel.width - 2 * toolBorderThickness,
         50
     };
-    RenderTexture2D editor = LoadRenderTexture(
-        editorPanel.width,
-        editorPanel.height
-    );
     Camera2D editorCam = {
         CLITERAL(Vector2) {
-            editorPanel.width/2,
-            editorPanel.height/2
+            editorPanel.x + editorPanel.width/2,
+            editorPanel.y + editorPanel.height/2
         },
         CLITERAL(Vector2) {0, 0},
         0,
@@ -76,37 +72,15 @@ int main(void) {
             editorPanel.x = toolPanel.width,
             editorPanel.width = GetScreenWidth() - toolPanel.width;
             editorPanel.height = GetScreenHeight();
-            editor = LoadRenderTexture(
-                editorPanel.width,
-                editorPanel.height
-            );
-        }
-        if (IsMouseButtonDown(MOUSE_BUTTON_RIGHT)) {
-            Vector2 delta = Vector2Scale(mouseDelta, -1.0f / editorCam.zoom);
-            editorCam.target = Vector2Add(editorCam.target, delta);
-        }
-        float wheel = GetMouseWheelMove();
-        if (wheel != 0) {
-            // Mouse position wrt the editor
-            Vector2 mouseEditorPos = CLITERAL(Vector2) {
-                mousePos.x - editorPanel.x,
-                mousePos.y - editorPanel.y
-            };
-            Vector2 mouseWorldPos = GetScreenToWorld2D(mouseEditorPos, editorCam);
-            editorCam.offset = mouseEditorPos;
-            editorCam.target = mouseWorldPos;
-            const float ZOOM_INCREMENT = 0.05f;
-            const float MIN_ZOOM = 0.1f;
-            const float MAX_ZOOM = 2.0f;
-            float targetZoom = editorCam.zoom + wheel * ZOOM_INCREMENT;
-            editorCam.zoom = Clamp(targetZoom, MIN_ZOOM, MAX_ZOOM);
         }
 
         BeginDrawing();
 
             const Color guiBGColor = {0x5c, 0x57, 0x57, 0xff};
             ClearBackground(guiBGColor);
-            DrawEditor(editor, editorPanel, editorCam);
+
+            DrawEditor(editorPanel, &editorCam);
+            DrawRectangleLinesEx(editorPanel, toolBorderThickness, toolBorderColor);
             if (CheckCollisionPointRec(mousePos, testButton)) {
                 if (IsMouseButtonDown(MOUSE_BUTTON_LEFT)) {
                     DrawRectangleRec(testButton, DARKGRAY);
@@ -121,7 +95,6 @@ int main(void) {
             }
             DrawRectangleLinesEx(testButton, 4.0, BLACK);
             DrawRectangleLinesEx(toolPanel, toolBorderThickness, toolBorderColor);
-            DrawRectangleLinesEx(editorPanel, toolBorderThickness, toolBorderColor);
 
             DrawFPS(0, 0);
 
@@ -130,8 +103,6 @@ int main(void) {
     // ------------------------------------------------------------------------
 
     // De-Initialization ------------------------------------------------------
-    UnloadRenderTexture(editor);
-
     CloseWindow();
     // ------------------------------------------------------------------------
 
