@@ -1,6 +1,6 @@
 #include <raylib.h>
 #include <rlgl.h>
-#include "baseObject.h"
+#include "object.h"
 #include "editor.h"
 
 // Constants ------------------------------------------------------------------
@@ -19,13 +19,6 @@ int main(void) {
     // SetExitKey(KEY_NULL);
     
     Texture2D texture = LoadTexture(ASSETS_PATH "testimage.png");
-    
-    /* BaseObject testObj = CLITERAL(BaseObject){
-        CLITERAL(Vector2) {0, 0},
-        texture,
-        0,
-        0.1f
-    }; */
     
     const float toolBorderThickness = 2.0f;
     const Color toolBorderColor = WHITE;
@@ -81,6 +74,7 @@ int main(void) {
 
             DrawEditor(editorPanel, &editorCam);
             DrawRectangleLinesEx(editorPanel, toolBorderThickness, toolBorderColor);
+
             if (CheckCollisionPointRec(mousePos, testButton)) {
                 if (IsMouseButtonDown(MOUSE_BUTTON_LEFT)) {
                     DrawRectangleRec(testButton, DARKGRAY);
@@ -93,9 +87,16 @@ int main(void) {
             } else {
                 DrawRectangleRec(testButton, WHITE);
             }
+            if (CheckCollisionPointRec(mousePos, editorPanel)) {
+                printf("Cursor in editor\n");
+                Vector2 mouseWorldPos = GetScreenToWorld2D(mousePos, editorCam);
+                const int SPACING = 100;
+                Vector2 gridPos = SnapToGrid(mouseWorldPos, SPACING, Vector2Zero());
+                printf("Grid pos: (%.2f, %.2f)", gridPos.x, gridPos.y);
+            }
             DrawRectangleLinesEx(testButton, 4.0, BLACK);
             DrawRectangleLinesEx(toolPanel, toolBorderThickness, toolBorderColor);
-
+            
             DrawFPS(0, 0);
 
         EndDrawing();

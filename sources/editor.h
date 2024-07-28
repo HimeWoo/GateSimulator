@@ -80,7 +80,11 @@
                     CLITERAL(Vector2) {panel.x, panel.y}, *cam
                 );
                 Vector2 bottomRight = GetScreenToWorld2D(
-                    CLITERAL(Vector2) {panel.x + panel.width, panel.y + panel.height}, *cam
+                    CLITERAL(Vector2) {
+                        panel.x + panel.width,
+                        panel.y + panel.height
+                    },
+                    *cam
                 );
                 Rectangle panelWorld = {
                     topLeft.x,
@@ -90,7 +94,7 @@
                 };
 
                 // Spacing between grid lines at 1.0x zoom
-                const SPACING = 100;
+                const int SPACING = 100;
                 // Draw grid lines in world space
                 DrawGridLines(panelWorld, SPACING);
                 // Draw components
