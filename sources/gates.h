@@ -1,11 +1,19 @@
 #ifndef GATES_H
 #define GATES_H
 
-#include "object.h"
+#include "entity.h"
 
-    typedef struct GateAND {
-        Object o;
-        Object **in;
-    };
+    typedef enum {
+        OFF,
+        ON,
+        ERR
+    } GateState;
+
+    typedef struct Gate {
+        Entity obj;
+        GateState state;
+        Entity **in;
+        Entity **out;
+    } Gate;
 
 #endif

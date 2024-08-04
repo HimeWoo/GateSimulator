@@ -1,105 +1,76 @@
 #include <raylib.h>
 #include <rlgl.h>
-#include "object.h"
+#include "entity.h"
 #include "editor.h"
 
-// Constants ------------------------------------------------------------------
-const size_t DEFAULT_WINDOW_WIDTH = 600;
-const size_t DEFAULT_WINDOW_HEIGHT = 480;
-const char* DEFAULT_WINDOW_TITLE = "gateSimulator";
-const size_t DEFAULT_MAX_FPS = 144;
+// ----------------------------------------------------------------------------
+// Window information
 // ----------------------------------------------------------------------------
 
+const size_t WINDOW_WIDTH = 600;
+const size_t WINDOW_HEIGHT = 480;
+const char* WINDOW_TITLE = "Gate Simulator";
+const size_t MAX_FPS = 144;
+
+// ----------------------------------------------------------------------------
+// Globals
+// ----------------------------------------------------------------------------
+
+void Init(void);
+void Update(void);
+void Draw(void);
+
+// ----------------------------------------------------------------------------
+// Entry point
+// ----------------------------------------------------------------------------
 int main(void) {
-    // Initialization ---------------------------------------------------------
     SetConfigFlags(FLAG_WINDOW_RESIZABLE);
-    InitWindow(DEFAULT_WINDOW_WIDTH, DEFAULT_WINDOW_HEIGHT,
-                DEFAULT_WINDOW_TITLE);
-    SetTargetFPS(DEFAULT_MAX_FPS);
-    // SetExitKey(KEY_NULL);
+    InitWindow(WINDOW_WIDTH, WINDOW_HEIGHT, WINDOW_TITLE);
+    SetTargetFPS(MAX_FPS);
+    //SetExitKey(KEY_NULL);
     
+    Init();
+
     Texture2D texture = LoadTexture(ASSETS_PATH "testimage.png");
-    
-    const float toolBorderThickness = 2.0f;
-    const Color toolBorderColor = WHITE;
 
-    Rectangle toolPanel = {
-        0,
-        0,
-        GetScreenWidth()/4,
-        GetScreenHeight()
-    };
-    Rectangle editorPanel = {
-        toolPanel.width,
-        0,
-        GetScreenWidth() - toolPanel.width,
-        GetScreenHeight()
-    };
-    Rectangle testButton = {
-        toolPanel.x + toolBorderThickness,
-        toolPanel.y + toolBorderThickness,
-        toolPanel.width - 2 * toolBorderThickness,
-        50
-    };
-    Camera2D editorCam = {
-        CLITERAL(Vector2) {
-            editorPanel.x + editorPanel.width/2,
-            editorPanel.y + editorPanel.height/2
-        },
-        CLITERAL(Vector2) {0, 0},
-        0,
-        1
-    };
-
-    // ------------------------------------------------------------------------
-    
     // Main Loop --------------------------------------------------------------
     while(!WindowShouldClose()) {
-        // Mouse information ----------
         Vector2 mousePos = GetMousePosition();
         Vector2 mouseDelta = GetMouseDelta();
-        // ----------------------------
-        if (IsWindowResized()) {
-            toolPanel.width = GetScreenWidth()/4;
-            toolPanel.height = GetScreenHeight();
-            editorPanel.x = toolPanel.width,
-            editorPanel.width = GetScreenWidth() - toolPanel.width;
-            editorPanel.height = GetScreenHeight();
-        }
 
-        BeginDrawing();
+        Update();
+        Draw();
+
+        /* BeginDrawing();
 
             const Color guiBGColor = {0x5c, 0x57, 0x57, 0xff};
             ClearBackground(guiBGColor);
 
             DrawEditor(editorPanel, &editorCam);
-            DrawRectangleLinesEx(editorPanel, toolBorderThickness, toolBorderColor);
+            
+            if (CheckCollisionPointRec(mousePos, editorPanel)) {
+                Vector2 mouseWorldPos = GetScreenToWorld2D(mousePos, editorCam);
+                Vector2 gridPos = SnapToGrid(mouseWorldPos, Vector2Zero());
+                printf("Grid pos: (%.2f, %.2f)\n", gridPos.x, gridPos.y);
+            }
 
+            Color testButtonColor = WHITE;
             if (CheckCollisionPointRec(mousePos, testButton)) {
                 if (IsMouseButtonDown(MOUSE_BUTTON_LEFT)) {
-                    DrawRectangleRec(testButton, DARKGRAY);
+                    testButtonColor = DARKGRAY;
                 } else {
-                    DrawRectangleRec(testButton, GRAY);
+                    testButtonColor = GRAY;
                 }
                 if (IsMouseButtonReleased(MOUSE_BUTTON_LEFT)) {
                     printf("Button clicked\n");
                 }
-            } else {
-                DrawRectangleRec(testButton, WHITE);
             }
-            if (CheckCollisionPointRec(mousePos, editorPanel)) {
-                printf("Cursor in editor\n");
-                Vector2 mouseWorldPos = GetScreenToWorld2D(mousePos, editorCam);
-                const int SPACING = 100;
-                Vector2 gridPos = SnapToGrid(mouseWorldPos, SPACING, Vector2Zero());
-                printf("Grid pos: (%.2f, %.2f)", gridPos.x, gridPos.y);
-            }
+            DrawRectangleRec(testButton, testButtonColor);
             DrawRectangleLinesEx(testButton, 4.0, BLACK);
-            DrawRectangleLinesEx(toolPanel, toolBorderThickness, toolBorderColor);
             
             DrawFPS(0, 0);
 
-        EndDrawing();
+        EndDrawing(); */
     }
     // ------------------------------------------------------------------------
 
@@ -108,4 +79,34 @@ int main(void) {
     // ------------------------------------------------------------------------
 
     return 0;
+}
+
+// ----------------------------------------------------------------------------
+// Initialization
+// ----------------------------------------------------------------------------
+void Init(void) {
+    InitEditor();
+}
+
+// ----------------------------------------------------------------------------
+// Update
+// ----------------------------------------------------------------------------
+void Update(void) {
+    UpdateEditor();
+}
+
+// ----------------------------------------------------------------------------
+// Draw next frame
+// ----------------------------------------------------------------------------
+void Draw(void) {
+    BeginDrawing();
+
+        const Color guiBGColor = {0x5c, 0x57, 0x57, 0xff};
+        ClearBackground(guiBGColor);
+
+        DrawEditor();
+
+        DrawFPS(0, 0);
+
+    EndDrawing();
 }
