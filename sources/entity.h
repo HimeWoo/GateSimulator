@@ -13,9 +13,12 @@
         float scale;
     } Entity;
 
+    // All loaded entities
+    extern Entity **entities;
+    extern int numEntities;
+
     Entity *NewEntity(Vector2 pos, Texture2D tex, float rot, float scale);
     void DrawEntity(Entity *e, Color tint);
-    void TranslateEntity(Entity *e, Vector2 trans);
     bool IsWithinEntity(Entity *e, Vector2 pos);
     void PrintEntityInfo(Entity *e);
 

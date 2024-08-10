@@ -9,11 +9,15 @@
         ERR
     } GateState;
 
-    typedef struct Gate {
+    typedef struct Gate Gate;
+    struct Gate {
         Entity obj;
         GateState state;
-        Entity **in;
-        Entity **out;
-    } Gate;
+        Gate **in;
+        int numIn;
+        Gate **out;
+        int numOut;
+        GateState (*op)(Gate);
+    };
 
 #endif

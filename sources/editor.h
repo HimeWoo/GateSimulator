@@ -4,7 +4,15 @@
 #include <raylib.h>
 #include <raymath.h>
 #include "entity.h"
+#include "gates.h"
 
+    static Rectangle toolPanel;
+    static Rectangle editorPanel;
+    static Camera2D editorCam;
+    static Rectangle testButton;
+    static Color testButtonColor;
+    static Texture2D testTexture;
+    
     // Initialize editor panels and entity array
     void InitEditor(void);
 
@@ -15,9 +23,9 @@
     void DrawGridLines(Rectangle panel);
 
     // Update entities and camera
-    void UpdateEditor();
+    void UpdateEditor(void);
 
     // Draw the editor and entities
-    void DrawEditor();
+    void DrawEditor(void);
 
 #endif

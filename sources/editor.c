@@ -7,19 +7,7 @@
 
 const float toolBorderThickness = 2.0f;
 const Color toolBorderColor = WHITE;
-const int SPACING = 100;
-
-// ------------------------------------------------------------------------
-// Globals
-// ------------------------------------------------------------------------
-Entity **entities;
-int numEntities;
-Rectangle toolPanel;
-Rectangle editorPanel;
-Camera2D editorCam;
-Rectangle testButton;
-Color testButtonColor;
-Texture2D testTexture;
+const int SPACING = 64;
 
 void InitEditor(void) {
     entities = malloc(0);
@@ -100,15 +88,10 @@ void UpdateEditor() {
             Vector2 delta = Vector2Scale(mouseDelta, -1.0f / editorCam.zoom);
             editorCam.target = Vector2Add(editorCam.target, delta);
         }
-        if (IsMouseButtonReleased(MOUSE_BUTTON_LEFT)) {
-            printf("Mouse up: -------------------------------\n");
-            printf("\t- Before:\tnumEntities = %d\n", numEntities);
+        if (IsMouseButtonPressed(MOUSE_BUTTON_LEFT)) {
+            printf("RMB pressed\n");
             Vector2 snappedPos =  SnapToGrid(mouseWorldPos, Vector2Zero());
             Entity *e = NewEntity(snappedPos, testTexture, 0.0f, 0.1f);
-            numEntities++;
-            entities = realloc(entities, numEntities * sizeof(Entity));
-            entities[numEntities - 1] = e;
-            printf("\t- After:\tnumEntities = %d\n", numEntities);
         } 
         float wheel = GetMouseWheelMove();
         if (wheel != 0) {
@@ -151,8 +134,6 @@ void DrawEditor() {
                 bottomRight.y - topLeft.y
             };
 
-            // Spacing between grid lines at 1.0x zoom
-            const int SPACING = 100;
             // Draw grid lines in world space
             DrawGridLines(panelWorld);
             // Draw components
@@ -180,12 +161,6 @@ void DrawEditor() {
                     bottomRight.x - topLeft.x, bottomRight.y - topLeft.y
                 };
                 if (CheckCollisionRecs(entityWorldRec, editorPanel)) {
-                    printf("Entity <%d>: ---------\n", i);
-                    printf(
-                        "\t- top left:\t(%.2f, %.2f)\n",
-                        entityWorldRec.x, 
-                        entityWorldRec.y
-                    );
                     DrawEntity(entities[i], WHITE);
                     DrawRectangleLinesEx(entityRec, 4, RED);
                 }
