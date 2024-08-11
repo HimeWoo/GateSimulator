@@ -10,9 +10,6 @@ const Color toolBorderColor = WHITE;
 const int SPACING = 64;
 
 void InitEditor(void) {
-    entities = malloc(0);
-    numEntities = 0;
-    
     toolPanel = CLITERAL(Rectangle) {
         0, 0, 
         50, GetScreenHeight()
@@ -90,8 +87,8 @@ void UpdateEditor() {
         }
         if (IsMouseButtonPressed(MOUSE_BUTTON_LEFT)) {
             printf("RMB pressed\n");
-            Vector2 snappedPos =  SnapToGrid(mouseWorldPos, Vector2Zero());
-            Entity *e = NewEntity(snappedPos, testTexture, 0.0f, 0.1f);
+            Vector2 snappedPos = SnapToGrid(mouseWorldPos, Vector2Zero());
+            Gate *g = NewGate(GateAND, snappedPos, 0.0f, 1.0f);
         } 
         float wheel = GetMouseWheelMove();
         if (wheel != 0) {
@@ -162,7 +159,7 @@ void DrawEditor() {
                 };
                 if (CheckCollisionRecs(entityWorldRec, editorPanel)) {
                     DrawEntity(entities[i], WHITE);
-                    DrawRectangleLinesEx(entityRec, 4, RED);
+                    DrawRectangleLinesEx(entityRec, 2, RED);
                 }
             }
 

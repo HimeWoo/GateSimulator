@@ -3,6 +3,11 @@
 Entity **entities;
 int numEntities;
 
+void InitEntities(void) {
+    entities = malloc(0);
+    numEntities = 0;
+}
+
 // Allocates memory for and returns a new entity
 Entity *NewEntity(Vector2 pos, Texture2D tex, float rot, float scale) {
     Entity *e = malloc(sizeof(Entity));

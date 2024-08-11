@@ -48,6 +48,8 @@ int main(void) {
 // Initialization
 // ----------------------------------------------------------------------------
 void Init(void) {
+    InitEntities();
+    InitGateTypes();
     InitEditor();
 }
 

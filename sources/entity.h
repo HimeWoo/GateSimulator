@@ -17,6 +17,7 @@
     extern Entity **entities;
     extern int numEntities;
 
+    void InitEntities(void);
     Entity *NewEntity(Vector2 pos, Texture2D tex, float rot, float scale);
     void DrawEntity(Entity *e, Color tint);
     bool IsWithinEntity(Entity *e, Vector2 pos);
