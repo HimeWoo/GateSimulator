@@ -9,12 +9,12 @@ void InitEntities(void) {
 }
 
 // Allocates memory for and returns a new entity
-Entity *NewEntity(Vector2 pos, Texture2D tex, float rot, float scale) {
+Entity *NewEntity(  Vector2 pos, int width, int height,
+                    Texture2D tex, float rot) {
     Entity *e = malloc(sizeof(Entity));
-    e->pos = pos;
+    e->rect = CLITERAL(Rectangle) { pos.x, pos.y, width, height };
     e->tex = tex;
     e->rot = rot;
-    e->scale = scale;
     numEntities++;
     entities = realloc(entities, numEntities * sizeof(Entity));
     entities[numEntities - 1] = e;
@@ -24,24 +24,17 @@ Entity *NewEntity(Vector2 pos, Texture2D tex, float rot, float scale) {
 
 // Draw an entity
 void DrawEntity(Entity *e, Color tint) {
-    DrawTextureEx(e->tex, e->pos, e->rot, e->scale, tint);
-}
-
-// Check if position is within the entity's texture
-bool IsWithinEntity(Entity *e, Vector2 pos) {
-    Rectangle texRec = CLITERAL(Rectangle){
-        e->pos.x,
-        e->pos.y,
-        e->tex.width * e->scale,
-        e->tex.height * e->scale
+    Rectangle texRectangle = CLITERAL(Rectangle) {
+        0, 0, e->tex.width, e->tex.height
     };
-    return CheckCollisionPointRec(pos, texRec);
+    DrawTexturePro(e->tex, texRectangle, e->rect, Vector2Zero(), e->rot, tint);
 }
 
 // Print entity information
 void PrintEntity(Entity *e) {
     printf("Entity: <%p> ---------------------------\n", &e);
-    printf("| pos: (%.2f, %.2f)\n", e->pos.x, e->pos.y);
+    printf("| pos: (%.2f, %.2f)\n", e->rect.x, e->rect.y);
+    printf("| dim: %d x %d\n", e->rect.width, e->rect.height);
     printf("| rot: %.2f\n", e->rot);
     printf("| scale: %.2f\n", e->scale);
 }

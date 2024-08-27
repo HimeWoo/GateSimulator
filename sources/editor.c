@@ -5,15 +5,16 @@
 // Constants
 // ----------------------------------------------------------------------------
 
-const float toolBorderThickness = 2.0f;
-const Color toolBorderColor = WHITE;
-const int SPACING = 64;
+const float borderThickness = 2.0f;
+const Color borderColor = WHITE;
+const int SPACING = 16;
+
+static ClickMode clickMode = CLICK_SELECT;
+static ToolMode tool = CREATE_OR;
 
 void InitEditor(void) {
-    toolPanel = CLITERAL(Rectangle) {
-        0, 0, 
-        50, GetScreenHeight()
-    };
+    InitToolbar();
+    InitGateTypes();
     editorPanel = CLITERAL(Rectangle) {
         toolPanel.width, 0,
         GetScreenWidth() - toolPanel.width, GetScreenHeight()
@@ -29,31 +30,33 @@ void InitEditor(void) {
     };
 
     testButton = CLITERAL(Rectangle) {
-        toolPanel.x + toolBorderThickness, toolPanel.y + toolBorderThickness,
-        toolPanel.width - 2 * toolBorderThickness, toolPanel.width
+        toolPanel.x + borderThickness, toolPanel.y + borderThickness,
+        toolPanel.width - 2 * borderThickness,
+        toolPanel.width - 2 * borderThickness
     };
     testButtonColor = WHITE;
     testTexture = LoadTexture(ASSETS_PATH "testimage.png");
 }
 
-Vector2 SnapToGrid(Vector2 pos, Vector2 offset) {
-    Vector2 snapPos = {
-        roundf(pos.x / SPACING) * SPACING,
-        roundf(pos.y / SPACING) * SPACING
+Vector2 SnapToGrid(Vector2 pos, Vector2 offset, int tileSize) {
+    return CLITERAL(Vector2) {
+        //roundf(pos.x / tileSize) * tileSize,
+        //roundf(pos.y / tileSize) * tileSize
+        floorf(pos.x / tileSize + offset.x) * tileSize,
+        floorf(pos.y / tileSize + offset.y) * tileSize
     };
-    return Vector2Add(snapPos, offset);
 }
 
-void DrawGridLines(Rectangle panel) {
+void DrawGridLines(Rectangle panel, int tileSize) {
     // Color of the x=0 and y=0 lines
     const Color AXIS_COLOR = CLITERAL(Color) {0x00, 0x40, 0x00, 255};
     // Color of the other grid lines
     const Color LINE_COLOR = CLITERAL(Color) {0x00, 0x20, 0x00, 255};
 
     // Draw vertical lines
-    float minX = SPACING * (floorf(panel.x / SPACING) - 2);
-    float maxX = SPACING * (floorf((panel.x + panel.width) / SPACING) + 3);
-    for (float lineX = minX; lineX < maxX; lineX += SPACING) {
+    float minX = tileSize * (floorf(panel.x / tileSize) - 2);
+    float maxX = tileSize * (floorf((panel.x + panel.width) / tileSize) + 3);
+    for (float lineX = minX; lineX < maxX; lineX += tileSize) {
         Color color;
         if (lineX == 0)  color = AXIS_COLOR;
         else color = LINE_COLOR;
@@ -61,9 +64,9 @@ void DrawGridLines(Rectangle panel) {
     }
 
     // Draw horizontal lines
-    float minY = SPACING * (floorf(panel.y / SPACING) - 2);
-    float maxY = SPACING * (floorf((panel.y + panel.height) / SPACING) + 3);
-    for (float lineY = minY; lineY < maxY; lineY += SPACING) {
+    float minY = tileSize * (floorf(panel.y / tileSize) - 2);
+    float maxY = tileSize * (floorf((panel.y + panel.height) / tileSize) + 3);
+    for (float lineY = minY; lineY < maxY; lineY += tileSize) {
         Color color;
         if (lineY == 0) color = AXIS_COLOR;
         else color = LINE_COLOR;
@@ -71,7 +74,42 @@ void DrawGridLines(Rectangle panel) {
     }
 }
 
-void UpdateEditor() {
+void HandleLeftClick(void) {
+    Vector2 mousePos = GetMousePosition();
+    Vector2 mouseWorldPos = GetScreenToWorld2D(mousePos, editorCam);
+    Vector2 snappedPos = SnapToGrid(mouseWorldPos, Vector2Zero(), SPACING);
+    switch (clickMode) {
+        case CLICK_SELECT:
+            break;
+        case CLICK_CREATE:
+            bool mouseInEntity = false;
+            for (int i = 0; i < numEntities; i++) {
+                if (CheckCollisionPointRec(mouseWorldPos, entities[i]->rect)) {
+                    mouseInEntity = true;
+                    printf("Error: Cannot overlap entities\n");
+                    break;
+                }
+            }
+            if (!mouseInEntity) {
+                switch (tool) {
+                    case CREATE_OR:
+                        NewGate(GateOR, snappedPos, SPACING, SPACING, 0.0f);
+                        printf("OR created\n");
+                        break;
+                    case CREATE_AND:
+                        NewGate(GateAND, snappedPos, SPACING, SPACING, 0.0f);
+                        printf("AND created\n");
+                        break;
+                }
+            }
+            break;
+        default:
+            printf("Error: Invalid mode\n");
+            exit(0);
+    }
+}
+
+void UpdateEditor(void) {
     if (IsWindowResized()) {
         toolPanel.height = GetScreenHeight();
         editorPanel.width = GetScreenWidth() - toolPanel.width;
@@ -85,16 +123,24 @@ void UpdateEditor() {
             Vector2 delta = Vector2Scale(mouseDelta, -1.0f / editorCam.zoom);
             editorCam.target = Vector2Add(editorCam.target, delta);
         }
+        if (IsKeyDown(KEY_LEFT_CONTROL)) {
+            if (IsKeyPressed(KEY_ONE)) {
+                clickMode = CLICK_SELECT;
+                printf("New mode selected: Select\n");
+            } else if (IsKeyPressed(KEY_TWO)) {
+                clickMode = CLICK_CREATE;
+                printf("New mode selected: Create\n");
+            }
+        }
         if (IsMouseButtonPressed(MOUSE_BUTTON_LEFT)) {
-            printf("RMB pressed\n");
-            Vector2 snappedPos = SnapToGrid(mouseWorldPos, Vector2Zero());
-            Gate *g = NewGate(GateAND, snappedPos, 0.0f, 1.0f);
-        } 
+            printf("LMB pressed\n");
+            HandleLeftClick();
+        }
         float wheel = GetMouseWheelMove();
         if (wheel != 0) {
-            const float ZOOM_INCREMENT = 0.05f;
-            const float MIN_ZOOM = 0.1f;
-            const float MAX_ZOOM = 2.0f;
+            const float ZOOM_INCREMENT = 0.25f;
+            const float MIN_ZOOM = 0.25f;
+            const float MAX_ZOOM = 8.0f;
 
             editorCam.offset = mousePos;
             editorCam.target = mouseWorldPos;
@@ -104,7 +150,7 @@ void UpdateEditor() {
     }
 }
 
-void DrawEditor() {
+void DrawEditor(void) {
     BeginMode2D(editorCam);
 
         BeginScissorMode(   editorPanel.x, editorPanel.y, 
@@ -132,20 +178,16 @@ void DrawEditor() {
             };
 
             // Draw grid lines in world space
-            DrawGridLines(panelWorld);
+            DrawGridLines(panelWorld, SPACING);
             // Draw components
             for (int i = 0; i < numEntities; i++) {
                 Entity e = *(entities[i]);
-                Rectangle entityRec = CLITERAL(Rectangle) {
-                    e.pos.x, e.pos.y,
-                    e.scale * e.tex.width, e.scale * e.tex.height
-                };
                 Vector2 topLeftWorld = CLITERAL(Vector2) {
-                    entityRec.x, entityRec.y
+                    e.rect.x, e.rect.y
                 };
                 Vector2 bottomRightWorld = CLITERAL(Vector2) {
-                    entityRec.x + entityRec.width,
-                    entityRec.y + entityRec.height
+                    e.rect.x + e.rect.width,
+                    e.rect.y + e.rect.height
                 };
                 Vector2 topLeft = GetWorldToScreen2D(
                     topLeftWorld, editorCam
@@ -159,14 +201,14 @@ void DrawEditor() {
                 };
                 if (CheckCollisionRecs(entityWorldRec, editorPanel)) {
                     DrawEntity(entities[i], WHITE);
-                    DrawRectangleLinesEx(entityRec, 2, RED);
+                    // DrawRectangleLinesEx(entityRec, 2, RED);
                 }
             }
 
         EndScissorMode();
 
     EndMode2D();
-    DrawRectangleLinesEx(editorPanel, toolBorderThickness, toolBorderColor);
+    DrawRectangleLinesEx(editorPanel, borderThickness, borderColor);
     // test button --------------------
     if (CheckCollisionPointRec(GetMousePosition(), testButton)) {
         if (IsMouseButtonDown(MOUSE_BUTTON_LEFT)) {
@@ -181,5 +223,5 @@ void DrawEditor() {
     DrawRectangleRec(testButton, testButtonColor);
     DrawRectangleLinesEx(testButton, 3.0, BLACK);
     // --------------------------------
-    DrawRectangleLinesEx(toolPanel, toolBorderThickness, toolBorderColor);
+    DrawToolbar(borderThickness, borderColor);
 }

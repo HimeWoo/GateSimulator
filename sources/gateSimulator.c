@@ -49,7 +49,6 @@ int main(void) {
 // ----------------------------------------------------------------------------
 void Init(void) {
     InitEntities();
-    InitGateTypes();
     InitEditor();
 }
 

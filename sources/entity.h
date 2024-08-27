@@ -7,7 +7,7 @@
 #include <raymath.h>
     
     typedef struct Entity {
-        Vector2 pos;
+        Rectangle rect;
         Texture2D tex;
         float rot;
         float scale;
@@ -18,9 +18,9 @@
     extern int numEntities;
 
     void InitEntities(void);
-    Entity *NewEntity(Vector2 pos, Texture2D tex, float rot, float scale);
+    Entity *NewEntity(  Vector2 pos, int width, int height, Texture2D tex,
+                        float rot);
     void DrawEntity(Entity *e, Color tint);
-    bool IsWithinEntity(Entity *e, Vector2 pos);
     void PrintEntityInfo(Entity *e);
 
 #endif

@@ -4,9 +4,20 @@
 #include <raylib.h>
 #include <raymath.h>
 #include "entity.h"
+#include "toolbar.h"
+#include "button.h"
 #include "gates.h"
 
-    static Rectangle toolPanel;
+    typedef enum ClickMode {
+        CLICK_SELECT,
+        CLICK_CREATE
+    } ClickMode;
+
+    typedef enum ToolMode {
+        CREATE_OR,
+        CREATE_AND
+    } ToolMode;
+
     static Rectangle editorPanel;
     static Camera2D editorCam;
     static Rectangle testButton;
@@ -17,10 +28,13 @@
     void InitEditor(void);
 
     // Return the position snapped to the grid
-    Vector2 SnapToGrid(Vector2 pos, Vector2 offset);
+    Vector2 SnapToGrid(Vector2 pos, Vector2 offset, int tileSize);
 
     // Draw grid lines within the bounds
-    void DrawGridLines(Rectangle panel);
+    void DrawGridLines(Rectangle panel, int tileSize);
+
+    // Logic for left mouse button event
+    void HandleLeftClick(void);
 
     // Update entities and camera
     void UpdateEditor(void);

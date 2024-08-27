@@ -3,10 +3,10 @@
 
 #include "entity.h"
 
-    typedef enum {
+    typedef enum GateState {
+        ERR,
         OFF,
-        ON,
-        ERR
+        ON
     } GateState;
 
     typedef struct Gate Gate;
@@ -17,19 +17,21 @@
         int numIn;
         Gate **out;
         int numOut;
-        GateState (*op)(Gate *);
+        GateState (*Op)(Gate *);
+        bool isSelected;
     };
 
     typedef struct GateType {
         Texture2D tex;
-        GateState (*op)(Gate *);
+        GateState (*Op)(Gate *);
     } GateType;
 
     extern GateType GateOR;
     extern GateType GateAND;
 
     void InitGateTypes(void);
-    Gate *NewGate(GateType t, Vector2 pos, float rot, float scale);
+    Gate *NewGate(GateType t, Vector2 pos, int width, int height, float rot);
+    GateState opNULL(Gate *g);
     GateState opOR(Gate *g);
     GateState opAND(Gate *g);
 
