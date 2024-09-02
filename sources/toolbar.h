@@ -6,11 +6,9 @@
 #include <raylib.h>
 #include "button.h"
 
-    extern Rectangle toolPanel;
-    extern Button **tools;
-    extern const int numTools;
+extern Rectangle toolPanel;
 
-    void InitToolbar(void);
-    void DrawToolbar(float borderThickness, Color borderColor);
+void InitToolbar(void);
+void DrawToolbar(float borderThickness, Color borderColor);
 
 #endif

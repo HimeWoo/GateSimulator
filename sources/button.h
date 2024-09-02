@@ -5,12 +5,13 @@
 #include <stdlib.h>
 #include <raylib.h>
 
-    typedef struct Button {
-        Rectangle rec;
-        Texture2D tex;
-        void (*OnPress)(void);
-    } Button;
+typedef struct Button
+{
+  Rectangle rec;
+  Texture2D tex;
+  void (*OnPress)(void);
+} Button;
 
-    Button *NewButton(Rectangle rec, Texture2D tex, void (*OnPress)(void));
+Button *NewButton(Rectangle rec, Texture2D tex, void (*OnPress)(void));
 
 #endif

@@ -3,16 +3,21 @@
 #include "editor.h"
 
 // ----------------------------------------------------------------------------
-// Window information
+// Constants
 // ----------------------------------------------------------------------------
 
+// Window information ---------------------------------------------------------
 const size_t WINDOW_WIDTH = 600;
 const size_t WINDOW_HEIGHT = 480;
-const char* WINDOW_TITLE = "Gate Simulator";
+const char *WINDOW_TITLE = "Gate Simulator";
 const size_t MAX_FPS = 144;
+// ----------------------------------------------------------------------------
+
+// const float borderThickness = 2.0f;
+// const Color borderColor = WHITE;
 
 // ----------------------------------------------------------------------------
-// Globals
+// Definitions
 // ----------------------------------------------------------------------------
 
 void Init(void);
@@ -22,55 +27,60 @@ void Draw(void);
 // ----------------------------------------------------------------------------
 // Entry point
 // ----------------------------------------------------------------------------
-int main(void) {
-    SetConfigFlags(FLAG_WINDOW_RESIZABLE);
-    InitWindow(WINDOW_WIDTH, WINDOW_HEIGHT, WINDOW_TITLE);
-    SetTargetFPS(MAX_FPS);
-    //SetExitKey(KEY_NULL);
-    
-    Init();
+int main(void)
+{
+  SetConfigFlags(FLAG_WINDOW_RESIZABLE);
+  InitWindow(WINDOW_WIDTH, WINDOW_HEIGHT, WINDOW_TITLE);
+  SetTargetFPS(MAX_FPS);
+  SetExitKey(KEY_NULL);
 
-    // Main Loop --------------------------------------------------------------
-    while(!WindowShouldClose()) {
-        Update();
-        Draw();
-    }
-    // ------------------------------------------------------------------------
+  Init();
 
-    // De-Initialization ------------------------------------------------------
-    CloseWindow();
-    // ------------------------------------------------------------------------
+  // Main Loop --------------------------------------------------------------
+  while (!WindowShouldClose())
+  {
+    Update();
+    Draw();
+  }
+  // ------------------------------------------------------------------------
 
-    return 0;
+  // De-Initialization ------------------------------------------------------
+  CloseWindow();
+  // ------------------------------------------------------------------------
+
+  return 0;
 }
 
 // ----------------------------------------------------------------------------
 // Initialization
 // ----------------------------------------------------------------------------
-void Init(void) {
-    InitEntities();
-    InitEditor();
+void Init(void)
+{
+  InitEntities();
+  InitEditor();
 }
 
 // ----------------------------------------------------------------------------
 // Update
 // ----------------------------------------------------------------------------
-void Update(void) {
-    UpdateEditor();
+void Update(void)
+{
+  UpdateEditor();
 }
 
 // ----------------------------------------------------------------------------
 // Draw next frame
 // ----------------------------------------------------------------------------
-void Draw(void) {
-    BeginDrawing();
+void Draw(void)
+{
+  BeginDrawing();
 
-        const Color guiBGColor = {0x5c, 0x57, 0x57, 0xff};
-        ClearBackground(guiBGColor);
+    const Color guiBGColor = {0x5c, 0x57, 0x57, 0xff};
+    ClearBackground(guiBGColor);
 
-        DrawEditor();
+    DrawEditor();
 
-        DrawFPS(0, 0);
+    DrawFPS(0, 0);
 
-    EndDrawing();
+  EndDrawing();
 }

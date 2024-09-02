@@ -5,22 +5,23 @@
 #include <stdlib.h>
 #include <raylib.h>
 #include <raymath.h>
-    
-    typedef struct Entity {
-        Rectangle rect;
-        Texture2D tex;
-        float rot;
-        float scale;
-    } Entity;
 
-    // All loaded entities
-    extern Entity **entities;
-    extern int numEntities;
+typedef struct Entity
+{
+  Rectangle rectangle;
+  Texture2D texture;
+  Vector2 textureOffset;
+  float rotation;
+} Entity;
 
-    void InitEntities(void);
-    Entity *NewEntity(  Vector2 pos, int width, int height, Texture2D tex,
-                        float rot);
-    void DrawEntity(Entity *e, Color tint);
-    void PrintEntityInfo(Entity *e);
+// All loaded entities
+extern int numEntities;
+extern Entity **entities;
+
+void InitEntities(void);
+Entity *NewEntity(Vector2 pos, int width, int height, Texture2D tex,
+                  float rot);
+void DrawEntity(Entity *e, Color tint);
+void PrintEntityInfo(Entity *e);
 
 #endif
