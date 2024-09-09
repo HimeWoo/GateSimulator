@@ -23,6 +23,7 @@ const size_t MAX_FPS = 144;
 void Init(void);
 void Update(void);
 void Draw(void);
+void Unload(void);
 
 // ----------------------------------------------------------------------------
 // Entry point
@@ -32,7 +33,7 @@ int main(void)
   SetConfigFlags(FLAG_WINDOW_RESIZABLE);
   InitWindow(WINDOW_WIDTH, WINDOW_HEIGHT, WINDOW_TITLE);
   SetTargetFPS(MAX_FPS);
-  SetExitKey(KEY_NULL);
+  //SetExitKey(KEY_NULL);
 
   Init();
 
@@ -45,6 +46,7 @@ int main(void)
   // ------------------------------------------------------------------------
 
   // De-Initialization ------------------------------------------------------
+  Unload();
   CloseWindow();
   // ------------------------------------------------------------------------
 
@@ -83,4 +85,16 @@ void Draw(void)
     DrawFPS(0, 0);
 
   EndDrawing();
+}
+
+void Unload(void)
+{
+  for (int i = 0; i < numEntities; i++)
+  {
+    free(entities[i]);
+  }
+  free(entities);
+  UnloadTexture(testTexture);
+  //UnloadTexture(GateOR.texture);
+  //UnloadTexture(GateAND.texture);
 }

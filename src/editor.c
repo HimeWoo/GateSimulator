@@ -1,73 +1,89 @@
 #include "editor.h"
-#include "entity.h"
 
 // ----------------------------------------------------------------------------
 // Constants
 // ----------------------------------------------------------------------------
 
+const int TILE_SIZE = 16;
 const float borderThickness = 2.0f;
 const Color borderColor = WHITE;
-const int SPACING = 16;
+
+// ----------------------------------------------------------------------------
+// Editor variables
+// ----------------------------------------------------------------------------
 
 static ClickMode clickMode = CLICK_SELECT;
-static ToolMode tool = CREATE_OR;
-
-static Entity *pressed = NULL;
+static EntityType createTarget;
 static Entity *selected = NULL;
 
 void InitEditor(void)
 {
   InitToolbar();
-  InitGateTypes();
+  //InitGateTypes();
   editorPanel = CLITERAL(Rectangle){
-      toolPanel.width, 0,
-      GetScreenWidth() - toolPanel.width, GetScreenHeight()};
+      toolPanel.width,
+      0,
+      GetScreenWidth() - toolPanel.width,
+      GetScreenHeight()};
   editorCam = CLITERAL(Camera2D){
       CLITERAL(Vector2){
           editorPanel.x + editorPanel.width / 2,
           editorPanel.y + editorPanel.height / 2},
-      CLITERAL(Vector2){0, 0},
+      Vector2Zero(),
       0,
       1};
 
   testButton = CLITERAL(Rectangle){
-      toolPanel.x + borderThickness, toolPanel.y + borderThickness,
+      toolPanel.x + borderThickness,
+      toolPanel.y + borderThickness,
       toolPanel.width - 2 * borderThickness,
       toolPanel.width - 2 * borderThickness};
   testButtonColor = WHITE;
   testTexture = LoadTexture(ASSETS_PATH "testimage.png");
+
+  createTarget = GateNOT;
 }
 
-Vector2 SnapToGrid(Vector2 pos, Vector2 offset, int tileSize)
+Vector2 SnapToGrid(Vector2 pos, int tileSize)
 {
-  float outX = floorf(pos.x / tileSize + offset.x) * tileSize;
-  float outY = floorf(pos.y / tileSize + offset.y) * tileSize;
+  int outX = floorf((pos.x + tileSize / 2) / tileSize) * tileSize;
+  int outY = floorf((pos.y + tileSize / 2) / tileSize) * tileSize;
   return CLITERAL(Vector2){ outX, outY };
 }
 
 Rectangle GetWorldToScreenRec(Rectangle recWorld, Camera2D cam)
 {
-  Vector2 topLeftWorld = CLITERAL(Vector2){ recWorld.x, recWorld.y };
-  Vector2 botRightWorld = CLITERAL(Vector2){ 
-      recWorld.x + recWorld.width, recWorld.y + recWorld.height};
+  Vector2 topLeftWorld = CLITERAL(Vector2){
+      recWorld.x,
+      recWorld.y};
+  Vector2 botRightWorld = CLITERAL(Vector2){
+      recWorld.x + recWorld.width,
+      recWorld.y + recWorld.height};
   Vector2 topLeft = GetWorldToScreen2D(topLeftWorld, cam);
   Vector2 botRight = GetWorldToScreen2D(botRightWorld, cam);
   Rectangle out = CLITERAL(Rectangle){
-      topLeft.x, topLeft.y, 
-      botRight.x - topLeft.x, botRight.y - topLeft.y};
+      topLeft.x,
+      topLeft.y, 
+      botRight.x - topLeft.x,
+      botRight.y - topLeft.y};
   return out;
 }
 
 Rectangle GetScreenToWorldRec(Rectangle recScreen, Camera2D cam)
 {
-  Vector2 topLeftScreen = CLITERAL(Vector2){ recScreen.x, recScreen.y };
+  Vector2 topLeftScreen = CLITERAL(Vector2){
+      recScreen.x,
+      recScreen.y};
   Vector2 topLeftWorld = GetScreenToWorld2D(topLeftScreen, editorCam);
   Vector2 botRightScreen = CLITERAL(Vector2){
-    recScreen.x + recScreen.width, recScreen.y + recScreen.height};
+      recScreen.x + recScreen.width,
+      recScreen.y + recScreen.height};
   Vector2 botRightWorld = GetScreenToWorld2D(botRightScreen, editorCam);
   Rectangle out = CLITERAL(Rectangle){
-    topLeftWorld.x, topLeftWorld.y,
-    botRightWorld.x - topLeftWorld.x, botRightWorld.y - topLeftWorld.y};
+      topLeftWorld.x,
+      topLeftWorld.y,
+      botRightWorld.x - topLeftWorld.x,
+      botRightWorld.y - topLeftWorld.y};
   return out;
 }
 
@@ -119,12 +135,24 @@ void DrawGridLines(Rectangle panel, int tileSize)
   }
 }
 
+Entity *GetEntity(Vector2 posSnap)
+{
+  for (int i = 0; i < numEntities; i++)
+  {
+    if (Vector2Equals(entities[i]->position, posSnap))
+    {
+      return entities[i];
+    }
+  }
+  return NULL;
+}
+
 void UpdateEditor(void)
 {
   const Vector2 mousePos = GetMousePosition();
   const Vector2 mouseWorld = GetScreenToWorld2D(mousePos, editorCam);
   const Vector2 mouseDelta = GetMouseDelta();
-  const Vector2 snappedPos = SnapToGrid(mouseWorld, Vector2Zero(), SPACING);
+  const Vector2 mouseSnap = SnapToGrid(mouseWorld, TILE_SIZE);
 
   if (IsWindowResized())
   {
@@ -160,104 +188,50 @@ void UpdateEditor(void)
       {
         case CLICK_SELECT:
         {
-          /* for (int i = 0; i < numEntities; i++)
-          {
-            if (CheckCollisionPointRec(mouseWorld, entities[i]->rectangle))
-            {
-              pressed = entities[i];
-              printf("Pressed entity: <%p>\n", pressed);
-              break;
-            }
-          } */
           if (selected == NULL)
           {
             for (int i = 0; i < numEntities; i++)
             {
-              if (CheckCollisionPointRec(mouseWorld, entities[i]->rectangle))
+              Rectangle rec = GetTextureRec(*(entities[i]));
+              if (CheckCollisionPointRec(mouseWorld, rec))
               {
                 selected = entities[i];
                 printf("Selected entity: <%p>\n", selected);
+                PrintEntityInfo(selected);
                 break;
               }
             }
+          }
+          else
+          {
+            Entity *clicked = GetEntity(mouseSnap);
+            if (clicked == NULL)
+            {
+              selected->position.x = mouseSnap.x;
+              selected->position.y = mouseSnap.y;
+            }
+            selected = NULL;
           }
           break;
         }
         case CLICK_CREATE:
         {
           // Check if another entity is being clicked
-          bool mouseInEntity = false;
-          for (int i = 0; i < numEntities; i++)
+          Entity *collision = GetEntity(mouseSnap);
+          if (collision == NULL)
           {
-            if (CheckCollisionPointRec(mouseWorld, entities[i]->rectangle))
-            {
-              mouseInEntity = true;
-              printf("Error: Cannot overlap entities\n");
-              break;
-            }
+            Vector2 offset = CLITERAL(Vector2){
+              TILE_SIZE / 2,
+              TILE_SIZE / 2};
+            Entity *e = NewEntity(createTarget, mouseSnap, offset,
+                      3 * TILE_SIZE, 3 * TILE_SIZE, 0.0f);
+            printf("Entity created\n");
+            PrintEntityInfo(e);
           }
-
-          // If another entity is not being clicked, then create a gate
-          if (!mouseInEntity)
+          else
           {
-            switch (tool)
-            {
-            case CREATE_OR:
-              NewGate(GateOR, snappedPos, SPACING, SPACING, 0.0f);
-              printf("OR created\n");
-              break;
-            case CREATE_AND:
-              NewGate(GateAND, snappedPos, SPACING, SPACING, 0.0f);
-              printf("AND created\n");
-              break;
-            }
+            printf("Entity already exists there\n");
           }
-          break;
-        }
-        default:
-        {
-          printf("Error: Invalid mode\n");
-          exit(0);
-        }
-      }
-    }
-
-    // On LMB release
-    if (IsMouseButtonReleased(MOUSE_BUTTON_LEFT))
-    {
-      printf("LMB released\n");
-      switch (clickMode)
-      {
-        case CLICK_SELECT:
-        {
-          /* Entity *released = NULL;
-          for (int i = 0; i < numEntities; i++)
-          {
-            if (CheckCollisionPointRec(mouseWorld, entities[i]->rectangle))
-            {
-              released = entities[i];
-              break;
-            }
-          }
-          if (released != NULL && released == pressed)
-          {
-            if (released == selected)
-            {
-              selected = NULL;
-              printf("Deselected\n");
-            }
-            else
-            {
-              selected = released;
-              printf("New selection : <%p>\n", selected);
-            }
-            break;
-          }
-          pressed = NULL; */
-          break;
-        }
-        case CLICK_CREATE:
-        {
           break;
         }
         default:
@@ -295,7 +269,7 @@ void DrawEditor(void)
       ClearBackground(EDITOR_BG_COLOR);
 
       // Draw grid lines in world space
-      DrawGridLines(editorPanel, SPACING);
+      DrawGridLines(editorPanel, TILE_SIZE);
       // Draw components
       for (int i = 0; i < numEntities; i++)
       {
@@ -304,34 +278,34 @@ void DrawEditor(void)
         {
           continue;
         }
-        Rectangle recWorld = GetWorldToScreenRec(e->rectangle, editorCam);
+        Rectangle dest = GetTextureRec(*e);
+        Rectangle recWorld = GetWorldToScreenRec(dest, editorCam);
         if (CheckCollisionRecs(recWorld, editorPanel))
         {
-          DrawEntity(e, WHITE);
-          /* if (e == selected)
-          {
-            DrawRectangleLinesEx(e->rectangle, 1.0f, RED);
-          } */
+          DrawEntity(*e, WHITE);
+          DrawRectangleLinesEx(dest, 2, RED);
+          DrawCircleV(e->position, 2, BLUE);
         }
       }
 
       // Draw entity preview
       Vector2 mousePos = GetMousePosition();
       Vector2 mouseWorld = GetScreenToWorld2D(mousePos, editorCam);
+      Vector2 mouseSnap = SnapToGrid(mouseWorld, TILE_SIZE);
+      DrawCircleV(mouseSnap, TILE_SIZE / 8, WHITE);
       if (selected != NULL)
       {
         const Color alpha50 = (Color){ 255, 255, 255, 127 };
-        Rectangle texRectangle = CLITERAL(Rectangle){
-            0, 0, selected->texture.width, selected->texture.height };
-        float recWidth = selected->rectangle.width;
-        float recHeight = selected->rectangle.height;
-        Vector2 offsetPos = CLITERAL(Vector2){
-            mouseWorld.x - (recWidth / 2), mouseWorld.y - (recHeight / 2)};
-        Rectangle mouseRectangle = CLITERAL(Rectangle){
-            offsetPos.x, offsetPos.y,
-            recWidth, recHeight};
-        DrawTexturePro(selected->texture, texRectangle, mouseRectangle,
-                       Vector2Zero(), selected->rotation, alpha50);
+        Rectangle textureSrc = CLITERAL(Rectangle){
+            0,
+            0,
+            selected->texture.width,
+            selected->texture.height};
+        Rectangle mouseRectangle = GetTextureRec(*selected);
+        mouseRectangle.x = mouseSnap.x;
+        mouseRectangle.y = mouseSnap.y;
+        DrawTexturePro(selected->texture, textureSrc, mouseRectangle,
+                       selected->textureOffset, selected->rotation, alpha50);
       }
 
     EndScissorMode();
