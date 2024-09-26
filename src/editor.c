@@ -12,14 +12,15 @@ const Color borderColor = WHITE;
 // Editor variables
 // ----------------------------------------------------------------------------
 
-static ClickMode clickMode = CLICK_SELECT;
+static EditorMode editorMode = MODE_SELECT;
 static EntityType createTarget;
 static Entity *selected = NULL;
 
 void InitEditor(void)
 {
   InitToolbar();
-  //InitGateTypes();
+  InitEntityTypes(TILE_SIZE);
+  InitEntities();
   editorPanel = CLITERAL(Rectangle){
       toolPanel.width,
       0,
@@ -42,6 +43,16 @@ void InitEditor(void)
   testTexture = LoadTexture(ASSETS_PATH "testimage.png");
 
   createTarget = GateNOT;
+
+  Vector2 offset = CLITERAL(Vector2){ TILE_SIZE / 2, TILE_SIZE / 2 };
+  Entity *switch1 = NewEntity(IOSwitch, CLITERAL(Vector2){ 0, 0 },
+            offset, TILE_SIZE, TILE_SIZE, 0.0f);
+  Entity *switch2 = NewEntity(IOSwitch, CLITERAL(Vector2){ 0, TILE_SIZE * 2 },
+            offset, TILE_SIZE, TILE_SIZE, 0.0f);
+  Entity *and = NewEntity(GateAND, CLITERAL(Vector2){ TILE_SIZE * 2, 0 },
+            offset, TILE_SIZE * 3, TILE_SIZE * 3, 0.0f);
+  ConnectEntities(switch1, and);
+  ConnectEntities(switch2, and);
 }
 
 Vector2 SnapToGrid(Vector2 pos, int tileSize)
@@ -171,22 +182,27 @@ void UpdateEditor(void)
     {
       if (IsKeyPressed(KEY_ONE))
       {
-        clickMode = CLICK_SELECT;
+        editorMode = MODE_SELECT;
         printf("New mode selected: Select\n");
       }
       else if (IsKeyPressed(KEY_TWO))
       {
-        clickMode = CLICK_CREATE;
+        editorMode = MODE_CREATE;
         printf("New mode selected: Create\n");
+      }
+      else if (IsKeyPressed(KEY_R))
+      {
+        editorMode = MODE_SIMULATE;
+        printf("New mode selected: Simulate\n");
       }
     }
     // On LMB Press
     if (IsMouseButtonPressed(MOUSE_BUTTON_LEFT))
     {
       printf("LMB pressed\n");
-      switch (clickMode)
+      switch (editorMode)
       {
-        case CLICK_SELECT:
+        case MODE_SELECT:
         {
           if (selected == NULL)
           {
@@ -214,7 +230,7 @@ void UpdateEditor(void)
           }
           break;
         }
-        case CLICK_CREATE:
+        case MODE_CREATE:
         {
           // Check if another entity is being clicked
           Entity *collision = GetEntity(mouseSnap);
@@ -238,6 +254,14 @@ void UpdateEditor(void)
         {
           printf("Error: Invalid mode\n");
           exit(0);
+        }
+        case MODE_SIMULATE:
+        {
+          Entity *collision = GetEntity(mouseSnap);
+          if (collision != NULL && collision->type.onClick != NULL)
+          {
+            collision->type.onClick(collision);
+          }
         }
       }
     }
@@ -285,6 +309,10 @@ void DrawEditor(void)
           DrawEntity(*e, WHITE);
           DrawRectangleLinesEx(dest, 2, RED);
           DrawCircleV(e->position, 2, BLUE);
+          for (int i = 0; i < e->numOut; i++)
+          {
+            DrawLineEx(e->position, e->out[i]->position, 2.0f, GREEN);
+          }
         }
       }
 
@@ -299,13 +327,14 @@ void DrawEditor(void)
         Rectangle textureSrc = CLITERAL(Rectangle){
             0,
             0,
-            selected->texture.width,
-            selected->texture.height};
+            selected->type.textures[0].width,
+            selected->type.textures[0].height};
         Rectangle mouseRectangle = GetTextureRec(*selected);
         mouseRectangle.x = mouseSnap.x;
         mouseRectangle.y = mouseSnap.y;
-        DrawTexturePro(selected->texture, textureSrc, mouseRectangle,
-                       selected->textureOffset, selected->rotation, alpha50);
+        DrawTexturePro(selected->type.textures[0], textureSrc,
+                       mouseRectangle, selected->textureOffset,
+                       selected->rotation, alpha50);
       }
 
     EndScissorMode();
