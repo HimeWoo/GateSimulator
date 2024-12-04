@@ -1,3 +1,13 @@
 build
 .vscode
 examples
+
+# CMake Files
+CMakeCache.txt
+CMakeFiles/
+Makefile
+_deps/
+*.cmake
+
+# Executibles
+gateSimulator
